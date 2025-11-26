@@ -1,81 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>three.js css3d - periodic table</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Periodic Table 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        html, body { height: 100%; overflow: hidden; margin: 0; font-family: Helvetica, sans-serif; background: #000; }
+        html, body { height: 100%; margin: 0; overflow: hidden; }
         #container { position: fixed; inset: 0; }
 
-        a { color: #8ff; }
+        /* Profile button top-right */
+        #profile-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            font-family: sans-serif;
+            color: white;
+        }
+        #profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+        }
+        #user-name {
+            color: white;
+            font-weight: bold;
+        }
+        #sign-out-btn {
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+        #sign-out-btn:hover {
+            background: rgba(255,255,255,0.5);
+        }
 
+        /* Buttons for layouts */
         #menu {
             position: absolute;
             bottom: 20px;
             width: 100%;
             text-align: center;
+            z-index: 500;
         }
-
-        .element {
-            width: 120px;
-            height: 160px;
-            box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
-            border: 1px solid rgba(127,255,255,0.25);
-            text-align: center;
-            line-height: normal;
-            cursor: default;
-            position: relative;
-        }
-
-        .element:hover {
-            box-shadow: 0px 0px 12px rgba(0,255,255,0.75);
-            border: 1px solid rgba(127,255,255,0.75);
-        }
-
-        .element .photo {
-            position: absolute;
-            bottom: 38px;
-            left: 15px;
-            right: 15px;
-            width: 90px;
-            height: 100px;
-            color: rgba(127,255,255,0.75);
-            border-radius: 5px;
-            border: solid 1px black;
-        }
-        .element .name {
-            position: absolute;
-            bottom: 11px;
-            right: 11px;
-            left: 11px;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .element .age {
-            position: absolute;
-            right: 5px;
-            top: 3px;
-            font-weight: bold;
-            color: blueviolet;
-        }
-        .element .country {
-            position: absolute;
-            left: 5px;
-            top: 3px;
-            font-weight: bold;
-            color: blueviolet;
-        }
-        .element .interest {
-            position: absolute;
-            right: 11px;
-            left: 11px;
-            bottom: 3px;
-            font-size: 6px;
-            font-weight: bold;
-        }
-
         button {
             color: rgba(127,255,255,0.75);
             background: transparent;
@@ -84,60 +59,26 @@
             padding: 5px 10px;
             cursor: pointer;
             border-radius: 4px;
+            margin: 0 5px;
         }
-
         button:hover {
             background-color: rgba(0,255,255,0.5);
         }
-
         button:active {
             color: #000000;
             background-color: rgba(0,255,255,0.75);
         }
-
-        /* Profile button top-right */
-        #profile-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 1000;
-        }
-        #profile-pic {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: none;
-        }
-        #profile-name {
-            color: white;
-            font-weight: bold;
-        }
-        #sign-out-btn {
-            display: none;
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        #sign-out-btn:hover {
-            background: #e53935;
-        }
     </style>
-
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js"
-            }
-        }
-    </script>
 </head>
 <body>
+
+    <!-- Profile Button -->
+    <div id="profile-container">
+        <img id="profile-pic" src="" alt="Profile">
+        <span id="user-name">User</span>
+        <button id="sign-out-btn">Sign Out</button>
+    </div>
+
     <div id="container"></div>
     <div id="menu">
         <button id="table">TABLE</button>
@@ -146,62 +87,45 @@
         <button id="grid">GRID</button>
     </div>
 
-    <!-- Profile Button -->
-    <div id="profile-container">
-        <img id="profile-pic" src="" alt="Profile">
-        <span id="profile-name"></span>
-        <button id="sign-out-btn">Sign Out</button>
-    </div>
-
     <script>
-    // Check access token
-    (async function(){
+        // Show profile info if token exists
         const token = sessionStorage.getItem('access_token');
+        const profilePic = document.getElementById('profile-pic');
+        const userName = document.getElementById('user-name');
+        const signOutBtn = document.getElementById('sign-out-btn');
+
         if (!token) {
+            // Not signed in, redirect to login
             window.location.href = 'index.html';
-            return;
+        } else {
+            // Fetch user info from Google
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => res.json())
+            .then(user => {
+                profilePic.src = user.picture || '';
+                userName.textContent = user.name || 'User';
+            })
+            .catch(err => {
+                console.warn('Failed to load user info', err);
+                userName.textContent = 'User';
+                profilePic.src = '';
+            });
         }
 
-        // Get profile info
-        try {
-            const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (!res.ok) throw new Error('Profile fetch failed');
-            const profile = await res.json();
-            document.getElementById('profile-name').textContent = profile.name || '';
-            const pic = document.getElementById('profile-pic');
-            if (profile.picture) {
-                pic.src = profile.picture;
-                pic.style.display = 'block';
-            }
-            const signOutBtn = document.getElementById('sign-out-btn');
-            signOutBtn.style.display = 'block';
-            signOutBtn.addEventListener('click', () => {
-                sessionStorage.removeItem('access_token');
-                window.location.href = 'index.html';
-            });
-        } catch(e) { console.error(e); }
-
-        // Fetch Google Sheet data
-        const SHEET_ID = '15L9ehPSgmJfvMwjVyofRN9uKEvyXZ976m4fT6psp1mQ';
-        const RANGE = 'A2:F';
-        try {
-            const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(RANGE)}`, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const json = await res.json();
-            const flat = [];
-            for (const row of json.values || []) {
-                flat.push(row[0]||'', row[1]||'', row[2]||'', row[3]||'', row[4]||'', row[5]||'');
-            }
-            window.TABLE_DATA = flat;
-        } catch(e) {
-            console.error(e);
-            document.getElementById('container').innerHTML = `<div style="padding:20px;color:#fff;">Failed to load sheet data.</div>`;
-        }
-    })();
+        // Sign out button clears token and redirects
+        signOutBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('access_token');
+            window.location.href = 'index.html';
+        });
     </script>
+
+    <!-- Your existing Periodic Table 3D scripts go here -->
+    <script type="module" src="your_existing_periodictable_module.js"></script>
+
+</body>
+</html>
 
     <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js';
