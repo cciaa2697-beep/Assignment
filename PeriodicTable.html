@@ -6,17 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         html, body { height: 100%; margin: 0; overflow: hidden; }
-        #container { position: fixed; inset: 0; }
+        #container { position: fixed; inset: 0; z-index: 0; } /* behind UI */
 
         /* Profile button top-right */
         #profile-container {
-            position: absolute;
+            position: fixed;
             top: 10px;
             right: 10px;
             display: flex;
             align-items: center;
             gap: 10px;
-            z-index: 1000;
+            z-index: 10000; /* ensure it's above 3D scene */
             font-family: sans-serif;
             color: white;
         }
@@ -26,6 +26,7 @@
             border-radius: 50%;
             border: 2px solid white;
             cursor: pointer;
+            object-fit: cover;
         }
         #user-name {
             color: white;
@@ -43,9 +44,9 @@
             background: rgba(255,255,255,0.5);
         }
 
-        /* Buttons for layouts */
+        /* Layout buttons */
         #menu {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             width: 100%;
             text-align: center;
@@ -88,17 +89,14 @@
     </div>
 
     <script>
-        // Show profile info if token exists
         const token = sessionStorage.getItem('access_token');
         const profilePic = document.getElementById('profile-pic');
         const userName = document.getElementById('user-name');
         const signOutBtn = document.getElementById('sign-out-btn');
 
         if (!token) {
-            // Not signed in, redirect to login
             window.location.href = 'index.html';
         } else {
-            // Fetch user info from Google
             fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                 headers: { 'Authorization': 'Bearer ' + token }
             })
@@ -114,19 +112,11 @@
             });
         }
 
-        // Sign out button clears token and redirects
         signOutBtn.addEventListener('click', () => {
             sessionStorage.removeItem('access_token');
             window.location.href = 'index.html';
         });
     </script>
-
-    <!-- Your existing Periodic Table 3D scripts go here -->
-    <script type="module" src="your_existing_periodictable_module.js"></script>
-
-</body>
-</html>
-
     <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js';
     import { CSS3DRenderer, CSS3DObject } from 'https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/renderers/CSS3DRenderer.js';
