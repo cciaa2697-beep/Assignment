@@ -1,122 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Periodic Table 3D</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        html, body { height: 100%; margin: 0; overflow: hidden; }
-        #container { position: fixed; inset: 0; z-index: 0; } /* behind UI */
+<meta charset="UTF-8">
+<title>Periodic Table 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+html, body { height: 100%; margin: 0; overflow: hidden; }
 
-        /* Profile button top-right */
-        #profile-container {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 10000; /* ensure it's above 3D scene */
-            font-family: sans-serif;
-            color: white;
-        }
-        #profile-pic {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid white;
-            cursor: pointer;
-            object-fit: cover;
-        }
-        #user-name {
-            color: white;
-            font-weight: bold;
-        }
-        #sign-out-btn {
-            padding: 5px 10px;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid white;
-            border-radius: 4px;
-            cursor: pointer;
-            color: white;
-        }
-        #sign-out-btn:hover {
-            background: rgba(255,255,255,0.5);
-        }
+/* 3D container */
+#container { position: fixed; inset: 0; }
 
-        /* Layout buttons */
-        #menu {
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-            z-index: 500;
-        }
-        button {
-            color: rgba(127,255,255,0.75);
-            background: transparent;
-            outline: 1px solid rgba(127,255,255,0.75);
-            border: 0px;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 4px;
-            margin: 0 5px;
-        }
-        button:hover {
-            background-color: rgba(0,255,255,0.5);
-        }
-        button:active {
-            color: #000000;
-            background-color: rgba(0,255,255,0.75);
-        }
-    </style>
+/* Profile button top-right */
+#profile-container {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: sans-serif;
+    color: white;
+    pointer-events: auto; /* crucial */
+    transform: none !important; /* prevent 3D transforms from renderer */
+}
+#profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white;
+    cursor: pointer;
+    object-fit: cover;
+}
+#user-name { color: white; font-weight: bold; }
+#sign-out-btn {
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid white;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+}
+#sign-out-btn:hover { background: rgba(255,255,255,0.5); }
+
+/* Layout buttons */
+#menu {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+}
+button {
+    color: rgba(127,255,255,0.75);
+    background: transparent;
+    outline: 1px solid rgba(127,255,255,0.75);
+    border: 0px;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 0 5px;
+}
+button:hover { background-color: rgba(0,255,255,0.5); }
+button:active { color: #000000; background-color: rgba(0,255,255,0.75); }
+</style>
 </head>
 <body>
 
-    <!-- Profile Button -->
-    <div id="profile-container">
-        <img id="profile-pic" src="" alt="Profile">
-        <span id="user-name">User</span>
-        <button id="sign-out-btn">Sign Out</button>
-    </div>
+<div id="profile-container">
+    <img id="profile-pic" src="" alt="Profile">
+    <span id="user-name">User</span>
+    <button id="sign-out-btn">Sign Out</button>
+</div>
 
-    <div id="container"></div>
-    <div id="menu">
-        <button id="table">TABLE</button>
-        <button id="sphere">SPHERE</button>
-        <button id="helix">HELIX</button>
-        <button id="grid">GRID</button>
-    </div>
+<div id="container"></div>
 
-    <script>
-        const token = sessionStorage.getItem('access_token');
-        const profilePic = document.getElementById('profile-pic');
-        const userName = document.getElementById('user-name');
-        const signOutBtn = document.getElementById('sign-out-btn');
+<div id="menu">
+    <button id="table">TABLE</button>
+    <button id="sphere">SPHERE</button>
+    <button id="helix">HELIX</button>
+    <button id="grid">GRID</button>
+</div>
 
-        if (!token) {
-            window.location.href = 'index.html';
-        } else {
-            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => res.json())
-            .then(user => {
-                profilePic.src = user.picture || '';
-                userName.textContent = user.name || 'User';
-            })
-            .catch(err => {
-                console.warn('Failed to load user info', err);
-                userName.textContent = 'User';
-                profilePic.src = '';
-            });
-        }
+<script>
+const token = sessionStorage.getItem('access_token');
+const profilePic = document.getElementById('profile-pic');
+const userName = document.getElementById('user-name');
+const signOutBtn = document.getElementById('sign-out-btn');
 
-        signOutBtn.addEventListener('click', () => {
-            sessionStorage.removeItem('access_token');
-            window.location.href = 'index.html';
-        });
-    </script>
+if (!token) {
+    window.location.href = 'index.html';
+} else {
+    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(user => {
+        profilePic.src = user.picture || '';
+        userName.textContent = user.name || 'User';
+    })
+    .catch(err => {
+        console.warn('Failed to load user info', err);
+        userName.textContent = 'User';
+        profilePic.src = '';
+    });
+}
+
+signOutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem('access_token');
+    window.location.href = 'index.html';
+});
+</script>
+
+
     <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js';
     import { CSS3DRenderer, CSS3DObject } from 'https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/renderers/CSS3DRenderer.js';
@@ -279,3 +273,4 @@
     </script>
 </body>
 </html>
+
