@@ -324,53 +324,46 @@
 					targets.grid.push(object);
 				}
 
-				// Build tetrahedral targets (4-sided pyramid) — layered triangular lattice
+				// Build square-pyramid targets (4-sided pyramid) — layered square lattice
+				// This creates layers of square grids: base (largest) -> smaller squares -> apex
 				targets.tetra = [];
-				(function buildTetra(){
+				(function buildSquarePyramid(){
 					const nObjects = objects.length;
-					// find minimal N (side length) such that tetrahedral number >= nObjects
-					function tetraCount(N){ // total elements in tetrahedron with side N
-						return (N*(N+1)*(N+2))/6; // binomial(N+2,3)
-					}
-					let N = 1;
-					while(tetraCount(N) < nObjects) N++;
-					// spacing and sizes
-					const spacing = 140; // spacing between items in layer
-					const layerHeight = 140; // vertical step between layers
-					const sqrt3 = Math.sqrt(3);
-					let assigned = 0;
-					// center the whole tetra so it sits near origin
-					const totalHeight = (N-1)*layerHeight;
-					const topY = totalHeight/2; // apex at +topY
 
-					for(let k=0;k<N && assigned < nObjects;k++){ // layer index 0..N-1
-						const s = k+1; // side length for layer
-						// triangle side length L: choose proportional to (s-1)
-						const L = (s-1)*spacing;
-						const heightTri = L * (sqrt3/2);
-						// vertices of the equilateral triangle in xz plane, centered
-						const y = topY - k*layerHeight;
-						const a = new THREE.Vector3(0, y, (2*heightTri)/3);
-						const b = new THREE.Vector3(-L/2, y, -heightTri/3);
-						const c = new THREE.Vector3(L/2, y, -heightTri/3);
-						if(s===1){
-							const obj = new THREE.Object3D();
-							obj.position.copy(new THREE.Vector3(0,y,0));
-							targets.tetra.push(obj); assigned++; if(assigned>=nObjects) break;
-							continue;
-						}
-						for(let i=0;i<s && assigned < nObjects;i++){
-							for(let j=0;j<s-i && assigned < nObjects;j++){
-								// barycentric coordinates on subdivided triangle
-								const u = i/(s-1);
-								const v = j/(s-1);
-								const w = 1 - u - v;
-								const pos = new THREE.Vector3(0,0,0);
-								pos.addScaledVector(a, u);
-								pos.addScaledVector(b, v);
-								pos.addScaledVector(c, w);
+					// sum of squares up to N: total items for a pyramid with N layers
+					function pyramidCount(N){
+						return (N * (N + 1) * (2 * N + 1)) / 6; // sum_{k=1..N} k^2
+					}
+
+					// find minimal N such that pyramidCount(N) >= nObjects
+					let N = 1;
+					while (pyramidCount(N) < nObjects) N++;
+
+					const spacing = 140; // x/z spacing between items
+					const layerHeight = 140; // vertical spacing between layers
+
+					// center pyramid vertically so middle sits near origin
+					const totalHeight = (N - 1) * layerHeight;
+					const topY = totalHeight / 2;
+
+					let assigned = 0;
+
+					// Layers from top (s=1) to base (s=N)
+					for (let s = 1; s <= N && assigned < nObjects; s++) {
+						// For layer s, there are s x s items forming a square
+						const layerSide = s;
+						const L = (layerSide - 1) * spacing;
+						const offsetX = L / 2;
+						const offsetZ = L / 2;
+						const y = topY - (s - 1) * layerHeight;
+
+						// place items in a centered square grid
+						for (let ix = 0; ix < layerSide && assigned < nObjects; ix++) {
+							for (let iz = 0; iz < layerSide && assigned < nObjects; iz++) {
+								const px = (ix * spacing) - offsetX;
+								const pz = (iz * spacing) - offsetZ;
 								const obj = new THREE.Object3D();
-								obj.position.copy(pos);
+								obj.position.set(px, y, pz);
 								targets.tetra.push(obj);
 								assigned++;
 							}
